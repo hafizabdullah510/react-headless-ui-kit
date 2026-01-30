@@ -320,6 +320,79 @@ function App() {
 
 ---
 
+## Select Component - Important Notes
+
+The Select component uses an **object-based abstraction** for type safety and better developer experience.
+
+### ⚠️ TypeScript Type Annotation Required
+
+When using controlled Select with an initial value of `null`, you **must** provide an explicit type annotation:
+
+```typescript
+// ✅ CORRECT
+const [country, setCountry] = useState<Country | null>(null);
+
+// ❌ WRONG - TypeScript can't infer the type
+const [country, setCountry] = useState(null);
+```
+
+### Why Object-Based?
+
+Instead of working with primitive values, the Select component works with full objects:
+
+```typescript
+// Traditional select - only get the ID
+onChange={(e) => {
+  const id = e.target.value;  // Just a string
+  // Need to find the full object manually
+}}
+
+// Our Select - get the full object immediately
+onChange={(country) => {
+  console.log(country.name);  // ✅ All properties available
+  console.log(country.code);  // ✅ No lookup needed
+}}
+```
+
+---
+
+### 💡 TypeScript Tip: Handling Nullable State
+
+The `Select` component is designed to be **clearable**, supporting a "no selection" state. Consequently, the `onChange` callback and the `value` prop are typed as `T | null`.
+
+A common issue arises when initializing `useState` with a default object. TypeScript infers the state type strictly as that object, creating a mismatch when the component tries to pass `null` back to your state setter.
+
+#### Comparison: Inference vs. Explicit Typing
+
+```tsx
+interface Department {
+  id: string;
+  name: string;
+  category: string;
+}
+
+// ❌ WRONG: Implicit Inference
+// TS thinks 'department' can ONLY be an object.
+const [department, setDepartment] = useState({
+  id: "",
+  name: "",
+  category: "",
+});
+
+// This will trigger:
+// Error: Type 'null' is not assignable to type 'SetStateAction<{...}>'
+<Select value={department} onChange={(d) => setDepartment(d)} {...props} />;
+
+// ✅ RIGHT: Explicit Type Union
+// This allows the state to hold the object OR be null.
+const [department, setDepartment] = useState<Department | null>(null);
+
+// Works perfectly with the Select's internal logic
+<Select<Department> value={department} onChange={setDepartment} {...props} />;
+```
+
+---
+
 ## Styling
 
 ### Default Styles
